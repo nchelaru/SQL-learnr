@@ -1,0 +1,100 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=F}
+library(learnr)
+library(DBI)
+
+knitr::opts_chunk$set(echo = FALSE)
+
+orders <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/orders.txt')
+
+orderlines <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/orderlines.txt')
+
+products <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/products.txt')
+
+customers <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/customers.txt')
+
+campaigns <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/campaigns.txt')
+
+# Create an ephemeral in-memory RSQLite database
+con <- dbConnect(RSQLite::SQLite(), ":memory:")
+
+dbWriteTable(con, "orders", orders, overwrite=T)
+
+dbWriteTable(con, "orderlines", orderlines, overwrite=T)
+
+dbWriteTable(con, "products", products, overwrite=T)
+
+dbWriteTable(con, "customers", customers, overwrite=T)
+
+dbWriteTable(con, "campaigns", campaigns, overwrite=T)
+
+```
+
+
+## Getting to know the database
+
+### List all tables in the database
+
+Write the R code required to add two plus two:
+
+```{r list-tables, exercise=TRUE, exercise.diagnostics=F}
+dbListTables(con)
+```
+
+### List fields in table
+
+Now write a function that adds any two numbers and then call it:
+
+```{r list-fields, exercise=TRUE, exercise.diagnostics=F}
+dbListFields(con, "products")
+```
+
+## Select data
+
+### Exercise with Hint
+
+```{r simple-select, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders 
+          LIMIT 10"
+
+dbGetQuery(con, query)
+```
+
+## Filter data
+```{r filter, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders 
+          WHERE city='BALTIMORE'"
+
+dbGetQuery(con, query)
+```
+
+### Quiz
+
+*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
+
+Some questions to verify that you understand the purposes of various base and recommended R packages:
+
+```{r quiz}
+quiz(
+  question("Which package contains functions for installing other R packages?",
+    answer("base"),
+    answer("tools"),
+    answer("utils", correct = TRUE),
+    answer("codetools")
+  ),
+  question("Which of the R packages listed below are used to create plots?",
+    answer("lattice", correct = TRUE),
+    answer("tools"),
+    answer("stats"),
+    answer("grid", correct = TRUE)
+  )
+)
+```
+
