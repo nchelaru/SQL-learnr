@@ -1,15 +1,20 @@
 ---
-title: "Tutorial"
-output: learnr::tutorial
+title: "SQL Tutorial"
+output: 
+  learnr::tutorial: 
+    theme: "simplex" 
+    allow_skip: true
 runtime: shiny_prerendered
 ---
 
 ```{r setup, include=F}
 library(learnr)
+library(RSQLite)
 library(DBI)
 
-knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Query", exercise.eval = TRUE)
 
+## Get data files
 orders <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/orders.txt')
 
 orderlines <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/orderlines.txt')
@@ -20,9 +25,12 @@ customers <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/custo
 
 campaigns <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/campaigns.txt')
 
-# Create an ephemeral in-memory RSQLite database
-con <- dbConnect(RSQLite::SQLite(), ":memory:")
 
+## Create an ephemeral in-memory RSQLite database
+con <- dbConnect(SQLite(), ":memory:")
+
+
+## Create table for each data file
 dbWriteTable(con, "orders", orders, overwrite=T)
 
 dbWriteTable(con, "orderlines", orderlines, overwrite=T)
@@ -32,17 +40,18 @@ dbWriteTable(con, "products", products, overwrite=T)
 dbWriteTable(con, "customers", customers, overwrite=T)
 
 dbWriteTable(con, "campaigns", campaigns, overwrite=T)
-
 ```
 
 
-## Getting to know the database
+
+## Introduction
+
 
 ### List all tables in the database
 
 Write the R code required to add two plus two:
 
-```{r list-tables, exercise=TRUE, exercise.diagnostics=F}
+```{r list-tables, exercise=TRUE, exercise.diagnostics=F, exercise.cap = "Code"}
 dbListTables(con)
 ```
 
@@ -50,51 +59,349 @@ dbListTables(con)
 
 Now write a function that adds any two numbers and then call it:
 
-```{r list-fields, exercise=TRUE, exercise.diagnostics=F}
-dbListFields(con, "products")
+```{r list-fields, exercise=TRUE, exercise.diagnostics=F, exercise.cap = "Code"}
+dbListFields(con, "customers")
 ```
 
-## Select data
 
-### Exercise with Hint
 
-```{r simple-select, exercise=TRUE, exercise.diagnostics=F}
+
+
+
+
+## Select records {data-progressive=TRUE}
+
+### Select all columns
+
+```{r select-all, exercise=TRUE, exercise.diagnostics=F}
 query <- "SELECT * 
-          FROM orders 
+          FROM orderlines
           LIMIT 10"
 
 dbGetQuery(con, query)
 ```
 
-## Filter data
-```{r filter, exercise=TRUE, exercise.diagnostics=F}
-query <- "SELECT * 
-          FROM orders 
-          WHERE city='BALTIMORE'"
+### Select some columns
+
+```{r select-some, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT orderid, productid, billdate, totalprice
+          FROM orderlines
+          LIMIT 10"
 
 dbGetQuery(con, query)
 ```
 
-### Quiz
 
-*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
+### Select distinct values
 
-Some questions to verify that you understand the purposes of various base and recommended R packages:
+```{r distinct-select, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT DISTINCT city 
+          FROM orders"
 
-```{r quiz}
-quiz(
-  question("Which package contains functions for installing other R packages?",
-    answer("base"),
-    answer("tools"),
-    answer("utils", correct = TRUE),
-    answer("codetools")
-  ),
-  question("Which of the R packages listed below are used to create plots?",
-    answer("lattice", correct = TRUE),
-    answer("tools"),
-    answer("stats"),
-    answer("grid", correct = TRUE)
-  )
-)
+dbGetQuery(con, query)
 ```
 
+### Select NULL values
+
+```{r select-null, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders
+          WHERE city IS NULL"
+
+dbGetQuery(con, query)
+```
+
+Note, a NULL value is not the same as a blank value, as:
+
+```{r select-empty, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders
+          WHERE city = ''"
+
+dbGetQuery(con, query)
+```
+
+
+### Sort query results
+
+```{r sort-select, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT DISTINCT city 
+          FROM orders
+          ORDER BY city"
+
+dbGetQuery(con, query)
+```
+
+### Assign aliases
+
+To help make the data more readable:
+
+```{r alias-select, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT PRODUCTID AS ID, 
+                 PRODUCTNAME AS Name,
+                 PRODUCTGROUPCODE AS GroupCode,
+                 PRODUCTGROUPNAME AS GroupName,
+                 INSTOCKFLAG AS Status,
+                 FULLPRICE AS Price
+          FROM products
+          LIMIT 10"
+
+dbGetQuery(con, query)
+```
+
+
+
+
+
+
+## Filter records {data-progressive=TRUE}
+
+### WHERE
+
+#### Text values
+```{r filter-char, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM campaigns
+          WHERE channel='AD'"
+
+dbGetQuery(con, query)
+```
+
+<br>
+
+#### Numerical values
+
+For exact match, the value does not need to be in quotes:
+
+```{r filter-num, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders 
+          WHERE customerid=174257"
+
+dbGetQuery(con, query)
+```
+
+```{r filter-less, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders 
+          WHERE totalprice < 90"
+
+dbGetQuery(con, query)
+```
+
+<br>
+
+### AND
+
+```{r filter-and, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM products
+          WHERE PRODUCTGROUPNAME='CALENDAR' AND FULLPRICE > 20"
+
+dbGetQuery(con, query)
+```
+
+### OR
+
+```{r filter-or, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders
+          WHERE paymenttype='MC' OR paymenttype='VI'"
+
+dbGetQuery(con, query)
+```
+
+### NOT
+
+```{r filter-not, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM campaigns
+          WHERE NOT channel='insert'"
+
+dbGetQuery(con, query)
+```
+
+### Combine AND, OR, NOT
+
+```{r filter-combine, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders
+          WHERE state='MA' AND (city='NEWTON' OR city='CAMBRIDGE')"
+
+dbGetQuery(con, query)
+```
+
+### LIKE
+
+Wildcards:
+
+- `%` : None, one or multiple characters
+- `_` : A single character
+
+Get all customers who have a firstname starting with 'C':
+
+```{r like-multiple, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM customers
+          WHERE firstname LIKE 'C%'"
+
+dbGetQuery(con, query)
+```
+
+<br> 
+
+Get all campaigns whose ID git the pattern '205*':
+
+```{r like-single, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM campaigns
+          WHERE campaignid LIKE '205_'"
+
+dbGetQuery(con, query)
+```
+
+
+
+### IN
+
+A shorthand for multiple `OR` conditions:
+
+```{r filter-in, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT * 
+          FROM orders
+          WHERE state IN ('MA', 'NY', 'FL')"
+
+dbGetQuery(con, query)
+```
+
+
+### BETWEEN
+
+Select values within a given range:
+
+#### Numeric
+
+```{r between-numeric, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT orderid, orderdate, city, state, paymenttype, totalprice
+          FROM orders
+          WHERE totalprice BETWEEN 20 AND 30"
+
+dbGetQuery(con, query)
+```
+
+<br>
+
+#### Text
+
+```{r between-text, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT DISTINCT firstname
+          FROM customers
+          WHERE firstname BETWEEN 'KATHY' AND 'LAWRENCE'
+          ORDER BY firstname"
+
+dbGetQuery(con, query)
+```
+
+<br>
+
+#### Date
+
+```{r between-date, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT *
+          FROM orderlines
+          WHERE billdate BETWEEN '2009-12-01' AND '2010-12-01'
+          ORDER BY billdate"
+
+dbGetQuery(con, query)
+```
+
+
+
+## Aggregate records {data-progressive=TRUE}
+
+### Count
+
+```{r count, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT COUNT(DISTINCT state) 
+          FROM orders"
+
+dbGetQuery(con, query)
+```
+
+### Group by
+
+```{r group-by, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT gender, COUNT(DISTINCT customerid) 
+          FROM customers
+          GROUP BY gender"
+
+dbGetQuery(con, query)
+```
+
+
+### HAVING
+
+For filtering GROUP BY query results:
+
+```{r group-having, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT PRODUCTGROUPNAME, COUNT(DISTINCT PRODUCTID) 
+          FROM products
+          GROUP BY PRODUCTGROUPNAME
+          HAVING INSTOCKFLAG='Y'"
+      
+
+dbGetQuery(con, query)
+```
+
+
+### Min/Max
+
+```{r min, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT MIN(FULLPRICE)
+          FROM  products"
+
+dbGetQuery(con, query)
+```
+
+```{r max, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT MAX(discount) 
+          FROM campaigns"
+
+dbGetQuery(con, query)
+```
+
+
+### Average
+
+```{r average, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT AVG(FULLPRICE)
+          FROM products"
+
+dbGetQuery(con, query)
+```
+
+
+### Sum
+
+```{r sum, exercise=TRUE, exercise.diagnostics=F}
+query <- "SELECT SUM(discount)
+          FROM campaigns"
+
+dbGetQuery(con, query)
+```
+
+
+
+
+
+## Insert/Update records {data-progressive=TRUE}
+
+
+
+## Combine tables {data-progressive=TRUE}
+
+### Joins 
+
+### Union
+
+## Manage database {data-progressive=TRUE}
