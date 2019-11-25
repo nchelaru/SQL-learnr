@@ -5,9 +5,9 @@ account: nancy-chelaru-centea
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1284604
-bundleId: 2483898
+bundleId: 2590421
 url: https://nancy-chelaru-centea.shinyapps.io/SQL_learnr/
-when: 1570625860.22362
+when: 1573770683.32002
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: SQL_learnr.html|images/join_union_diagram.png
+ignoredFiles: SQL_learnr.html
