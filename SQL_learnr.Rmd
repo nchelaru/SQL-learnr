@@ -16,15 +16,15 @@ library(DBI)
 tutorial_options(exercise.cap = "Query", exercise.eval = F)
 
 ## Get data files
-orders <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/4180e548ac774a96ebbdba17d89853a635eae4a0/orders.txt')
+orders <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/data_files/orders.txt')
 
-orderlines <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/4180e548ac774a96ebbdba17d89853a635eae4a0/orderlines.txt')
+orderlines <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/data_files/orderline.txt')
 
-products <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/4180e548ac774a96ebbdba17d89853a635eae4a0/products.txt')
+products <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/data_files/product.txt')
 
-customers <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/4180e548ac774a96ebbdba17d89853a635eae4a0/customers.txt')
+customers <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/data_files/customer.txt')
 
-campaigns <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/4180e548ac774a96ebbdba17d89853a635eae4a0/campaigns.txt')
+campaigns <- read.delim('https://github.com/nchelaru/SQL-learnr/raw/master/data_files/campaign.txt')
 
 ## Rename column headers
 colnames(products) <- c('productid', 'productname', 'productgroupcode', 'productgroupname', 'instockflag', 'fullprice')
